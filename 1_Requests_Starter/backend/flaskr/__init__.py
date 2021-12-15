@@ -8,6 +8,18 @@ from models import setup_db, Book
 
 BOOKS_PER_SHELF = 8
 
+
+def pagination(request, selected_books):
+    # Pagination
+    page = request.args.get("page", 1, type=int)
+    start = (page - 1) * BOOKS_PER_SHELF
+    end = start + BOOKS_PER_SHELF
+
+    books = [book.format() for book in selected_books]
+    books_on_page = books[start:end]
+
+    return books_on_page
+
 # @DONE: General Instructions
 #   - As you're creating endpoints, define them and then search for
 #   'TO-DO' within the frontend to update the endpoints there.
@@ -48,20 +60,16 @@ def create_app(test_config=None):
     @app.route('/books', methods=['GET'])
     def get_books():
         # Pagination
-        page = request.args.get("page", 1, type=int)
-        start = (page - 1) * BOOKS_PER_SHELF
-        end = start + BOOKS_PER_SHELF
+        selected_books = Book.query.order_by(Book.id).all()
+        books_on_page = pagination(request, selected_books)
 
-        books = Book.query.order_by(Book.id).all()
-        formatted_books = [book.format() for book in books]
-
-        if formatted_books is None:
+        if books_on_page is None:
             abort(404)
         else:
             return jsonify({
                 "success": True,
-                "total_books": len(formatted_books),
-                "books": formatted_books[start:end]
+                "total_books": len(selected_books),
+                "books": books_on_page
             })
 
     # @DONE: Write a route that will update a single book's rating.
@@ -92,7 +100,7 @@ def create_app(test_config=None):
                     "id": book.id
                 })
         except:
-            abort(404)
+            abort(422)
 
     # @DONE: Write a route that will delete a single book.
     #        Response body keys: 'success', 'deleted'(id of deleted book),
@@ -111,24 +119,19 @@ def create_app(test_config=None):
             else:
                 book.delete()
 
-                # TODO: Pagination (refactor)
-                page = request.args.get("page", 1, type=int)
-                start = (page - 1) * BOOKS_PER_SHELF
-                end = start + BOOKS_PER_SHELF
-
-                books = Book.query.order_by(Book.id).all()
-                formatted_books = [book.format() for book in books]
+                selected_books = Book.query.order_by(Book.id).all()
+                books_on_page = pagination(request, selected_books)
 
                 return jsonify({
                     "success": True,
                     "deleted": book_id,
-                    "books": formatted_books[start:end],
-                    "total_books": len(formatted_books)
+                    "books": books_on_page,
+                    "total_books": len(selected_books)
                 })
         except:
-            abort(404)
+            abort(422)
 
-    # @TODO: Write a route that create a new book.
+    # @DONE: Write a route that create a new book.
     #        Response body keys: 'success', 'created'(id of created book),
     #        'books' and 'total_books'
     # TEST: When completed, you will be able to a new book using the form.
@@ -144,22 +147,20 @@ def create_app(test_config=None):
         new_rating = data.get("rating", None)
 
         try:
-            new_book = Book(title=new_title, author=new_author, rating=new_rating)
+            new_book = Book(
+                title=new_title,
+                author=new_author,
+                rating=new_rating)
             new_book.insert()
 
-            # TODO: Pagination (refactor)
-            page = request.args.get("page", 1, type=int)
-            start = (page - 1) * BOOKS_PER_SHELF
-            end = start + BOOKS_PER_SHELF
-
-            books = Book.query.order_by(Book.id).all()
-            formatted_books = [book.format() for book in books]
+            selected_books = Book.query.order_by(Book.id).all()
+            books_on_page = pagination(request, selected_books)
 
             return jsonify({
                 "success": True,
                 "created": new_book.id,
-                "books": formatted_books[start:end],
-                "total_books": len(formatted_books)
+                "books": books_on_page,
+                "total_books": len(selected_books)
             })
         except:
             abort(404)
