@@ -8,11 +8,15 @@ from models import setup_db, Book
 
 BOOKS_PER_SHELF = 8
 
-# @TODO: General Instructions
-#   - As you're creating endpoints, define them and then search for 'TODO' within the frontend to update the endpoints there.
-#     If you do not update the endpoints, the lab will not work - of no fault of your API code!
-#   - Make sure for each route that you're thinking through when to abort and with which kind of error
-#   - If you change any of the response body keys, make sure you update the frontend to correspond.
+# @DONE: General Instructions
+#   - As you're creating endpoints, define them and then search for
+#   'TO-DO' within the frontend to update the endpoints there.
+#     If you do not update the endpoints, the lab will not work -
+#     of no fault of your API code!
+#   - Make sure for each route that you're thinking through when to abort
+#   and with which kind of error
+#   - If you change any of the response body keys,
+#   make sure you update the frontend to correspond.
 
 
 def create_app(test_config=None):
@@ -32,12 +36,29 @@ def create_app(test_config=None):
         )
         return response
 
-    # @TODO: Write a route that retrivies all books, paginated.
+    # @DONE: Write a route that retrivies all books, paginated.
     #         You can use the constant above to paginate by eight books.
     #         If you decide to change the number of books per page,
-    #         update the frontend to handle additional books in the styling and pagination
+    #         update the frontend to handle additional books
+    #         in the styling and pagination
     #         Response body keys: 'success', 'books' and 'total_books'
-    # TEST: When completed, the webpage will display books including title, author, and rating shown as stars
+    # TEST: When completed, the webpage will display books including
+    # title, author, and rating shown as stars
+
+    @app.route('/books', methods=['GET'])
+    def get_books():
+        # Pagination
+        page = request.args.get("page", 1, type=int)
+        start = (page - 1) * 8
+        end = start + 8
+
+        books = Book.query.all()
+        formatted_books = [book.format() for book in books]
+        return jsonify({
+            "success": True,
+            "total_books": len(formatted_books),
+            "books": formatted_books[start:end]
+        })
 
     # @TODO: Write a route that will update a single book's rating.
     #         It should only be able to update the rating, not the entire representation
