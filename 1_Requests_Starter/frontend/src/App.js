@@ -18,7 +18,7 @@ class App extends Component {
 
   getBooks = () => {
     $.ajax({
-      url: `/books?page=${this.state.page}`, //TODO: update request URL
+      url: `/books?page=${this.state.page}`, //DONE: update request URL
       type: "GET",
       success: (result) => {
         this.setState({
