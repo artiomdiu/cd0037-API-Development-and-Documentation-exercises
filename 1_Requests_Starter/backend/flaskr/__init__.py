@@ -76,7 +76,6 @@ def create_app(test_config=None):
     @app.route('/books/<int:book_id>', methods=['PATCH'])
     def change_rating(book_id):
         data = request.get_json()
-        print(f'{data}')
 
         try:
             book = Book.query.filter(Book.id == book_id).one_or_none()
@@ -130,8 +129,39 @@ def create_app(test_config=None):
             abort(404)
 
     # @TODO: Write a route that create a new book.
-    #        Response body keys: 'success', 'created'(id of created book), 'books' and 'total_books'
-    # TEST: When completed, you will be able to a new book using the form. Try doing so from the last page of books.
-    #       Your new book should show up immediately after you submit it at the end of the page.
+    #        Response body keys: 'success', 'created'(id of created book),
+    #        'books' and 'total_books'
+    # TEST: When completed, you will be able to a new book using the form.
+    # Try doing so from the last page of books.
+    #       Your new book should show up immediately after you submit it
+    #       at the end of the page.
+
+    @app.route('/books', methods=['POST'])
+    def create_book():
+        data = request.get_json()
+        new_title = data.get("title", None)
+        new_author = data.get("author", None)
+        new_rating = data.get("rating", None)
+
+        try:
+            new_book = Book(title=new_title, author=new_author, rating=new_rating)
+            new_book.insert()
+
+            # TODO: Pagination (refactor)
+            page = request.args.get("page", 1, type=int)
+            start = (page - 1) * BOOKS_PER_SHELF
+            end = start + BOOKS_PER_SHELF
+
+            books = Book.query.order_by(Book.id).all()
+            formatted_books = [book.format() for book in books]
+
+            return jsonify({
+                "success": True,
+                "created": new_book.id,
+                "books": formatted_books[start:end],
+                "total_books": len(formatted_books)
+            })
+        except:
+            abort(404)
 
     return app
