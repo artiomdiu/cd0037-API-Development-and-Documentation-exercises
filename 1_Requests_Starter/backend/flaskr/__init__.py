@@ -63,7 +63,7 @@ def create_app(test_config=None):
         selected_books = Book.query.order_by(Book.id).all()
         books_on_page = pagination(request, selected_books)
 
-        if books_on_page is None:
+        if len(books_on_page) == 0:
             abort(404)
         else:
             return jsonify({
